@@ -3,6 +3,9 @@ const fs = require('fs');
 require('dotenv').config();
 
 const file = './gods-list.json';
+const blank = './blank.json';
+
+let blankList = require(blank);
 let godsList = require(file);
 
 // Define configuration options
@@ -43,15 +46,16 @@ function onMessageHandler (target, tags, msg, self) {
 
   // If the command is known, let's execute it
   if (commandName === '!god-request') {
-    const god = msg.slice(12);
+    const god = msg.slice(14);
     queueGod(user, god);
-    client.say(target, `${god} added by ${user}`);
+    client.say(target, `${god} added by @${user}`);
     console.log(`* Executed ${commandName} command`);
   }
 
   else if (commandName === '!god-request-list') {
-      const godsList = getQueue();
-      client.say(target, `${godsList}`);
+      //
+      const list = getQueue();
+      client.say(target, `${list}`);
       console.log(`* Executed ${commandName} command`);
   }
 
@@ -81,28 +85,39 @@ function queueGod(user, god) {
 }
 
 function getQueue() {
-    return JSON.stringify(godsList);
+    try {
+        let output = '';
+
+        for (let i = 0; i < godsList.length; i++) {
+            output += `${i+1}. ${godsList[i].god}\n`;
+        }
+
+        return output;
+    }
+    catch(error) {
+        console.log(error);
+        return 'No gods in queue';
+    }
 
 }
 
 function removeNextQueue() {
+    try {
+        const nextGod = godsList[0].god;
+        godsList = godsList.splice(1);
+        saveData();
 
-    const nextGod = godsList[0].god;
-
-    godsList = godsList.splice(0, 1);
-
-    saveData();
-    return JSON.stringify(nextGod);
+        return JSON.stringify(nextGod);
+    }
+    catch(error) {
+        console.log(error);
+        return 'No gods in queue';
+    }
 }
 
 function clearQueue() {
-
-    fs.writeFileSync(file, '[]');
-    const request = {
-        user: null,
-        god: null
-    };
-    godsList.push(request);
+    fs.writeFileSync(file, JSON.stringify(blankList));
+    godsList = blankList;
     saveData();
 }
 
