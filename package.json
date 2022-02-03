@@ -1,0 +1,27 @@
+{
+  "name": "god-requests",
+  "version": "1.0.0",
+  "description": "list of gods requested in chat",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RxParalyze/god-requests.git"
+  },
+  "keywords": [
+    "Smite",
+    "God Requests"
+  ],
+  "author": "RxParalyze",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/RxParalyze/god-requests/issues"
+  },
+  "homepage": "https://github.com/RxParalyze/god-requests#readme",
+  "dependencies": {
+    "dotenv": "^16.0.0",
+    "tmi.js": "^1.8.5"
+  }
+}
