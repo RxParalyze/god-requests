@@ -1,0 +1,10 @@
+//Create a .env file with the following information
+
+USERNAME: 'Rxparalyzebot'
+TWITCH_OAUTH_TOKEN: ''
+
+MOCKAPI_CLIENT_ID: ''
+MOCKAPI_CLIENT_SECRET: ''
+MOCKAPI_USER_ID: ''
+
+SECRET_CODE: ''

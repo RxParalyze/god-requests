@@ -38,7 +38,6 @@ client.connect();
 function onMessageHandler (target, tags, msg, self) {
   if (self || !msg.startsWith('!')) { return; } // Ignore messages from the bot
 
-  //TODO: Find the user that sent message, see if subscribed
   const user = tags.username;
 
   const commandName = msg.substring(0,msg.indexOf(':'));
