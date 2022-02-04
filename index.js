@@ -10,7 +10,7 @@ let godsList = require(file);
 
 // Define configuration options
 const opts = {
-    options: { debug: true },
+    options: { debug: false },
     connection: {
       secure: true,
       reconnect: true
@@ -89,7 +89,7 @@ function getQueue() {
         let output = '';
 
         for (let i = 0; i < godsList.length; i++) {
-            output += `${i+1}. ${godsList[i].god}\n`;
+            output += `${i+1}. ${godsList[i].god} from @${godsList[i].user}\n`;
         }
 
         return output;
