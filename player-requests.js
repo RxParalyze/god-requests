@@ -1,62 +1,112 @@
-const tmi = require('tmi.js');
 const fs = require('fs');
-require('dotenv').config();
 
-const file = './users-list.json';
+let users = require('./users-list.json')
 
-//INFO: https://dev.twitch.tv/docs/eventsub/handling-webhook-events
+/**
+ * USER JSON LAYOUT
+ * username -> string
+ * requests -> int
+ * level    -> int
+ * daily    -> boolean
+ */
 
-// Define configuration options
-const opts = {
-    options: { debug: false },
-    connection: {
-      secure: true,
-      reconnect: true
-    },
-    identity: {
-        username: process.env.USERNAME,
-        password: process.env.TWITCH_OAUTH_TOKEN
-    },
-    channels: [
-        'christdickson'
-    ]
-};
+export const requests = {
+    find: x => users.find(x),
+    changeSubLevel,
+    earnRequest,
+    spendRequest,
+    refundRequest,
+    checkRequests,
+    refreshDailies
+}
 
-// Create a client with our options
-const client = new tmi.client(opts);
+function checkRequests (username) {
+    const user = users.find(x => x.username.toString() === username);
 
-client.on('message', onMessageHandler);
-
-// Called every time a message comes in
-function onMessageHandler (target, tags, msg, self) {
-    if (self) { return; }
-
-    const user = tags.username;
-
-    //TODO: Add checks for subscription level, gifted subscriptions, or channel point purchase
-
-
-
-
+    if(user === null) {
+        return 0;
+    }
+    else {
+        return user.requests;
+    }
 }
 
 //check each user's subscription level
-function changeSubLevel() {
+function changeSubLevel(username, level) {
+    const user = users.find(x => x.username.toString() === username);
 
+    user.level = level;
+
+    if(user.level >= 2) {
+        user.daily = true;
+    }
+
+    users.push(user);
+    saveData();
 }
 
 //If a user earns a request, this will run
-export function earnRequest(user) {
+function earnRequest(username) {
+    const user = users.find(x => x.username.toString() === username);
 
+    var requestNum = user.requests;
+    user.requests = requestNum + 1;
+    users.push(user);
+    saveData();
 }
 
 //If a user spends a request, this will run
-export function spendRequest(user) {
+function spendRequest(username) {
+    const user = users.find(x => x.username.toString() === username);
 
+    var requestNum = user.requests;
+
+    if(user.daily === true) {
+        user.daily = false;
+        users.push(user);
+        saveData();
+        return 'Okay';
+    }
+
+    else if(checkRequests(username) === 0) {
+        return null;
+    }
+
+    else {
+        user.requests = requestNum - 1;
+        users.push(user);
+        saveData();
+        return 'Okay';
+    }
 }
 
 //refund requests
-export function refundRequest(user) {
+function refundRequest(username) {
+    const user = users.find(x => x.username.toString() === username);
 
+    var requestNum = user.requests;
+
+    if(user.level >= 2) {
+        user.daily = true;
+        users.push(user);
+    }
+    else {
+        user.requests = requestNum + 1;
+        users.push(user);
+    }
+    saveData();
 }
 
+function refreshDailies(){
+    for(const user in users) {
+        if (user.level >= 2) {
+            user.daily = true;
+            users.push(user);
+        }
+    }
+    saveData();
+}
+
+function saveData() {
+    fs.writeFileSync('./users-list.json', JSON.stringify(users, null, 4));
+}

@@ -23,6 +23,7 @@
   "dependencies": {
     "dotenv": "^16.0.0",
     "express": "^4.17.2",
-    "tmi.js": "^1.8.5"
+    "tmi.js": "^1.8.5",
+    "twitch-chat-cli": "^1.2.4"
   }
 }

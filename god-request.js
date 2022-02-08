@@ -1,3 +1,5 @@
+import { requests } from "./player-requests";
+
 const tmi = require('tmi.js');
 const fs = require('fs');
 require('dotenv').config();
@@ -35,7 +37,7 @@ client.on('connected', onConnectedHandler);
 client.connect();
 
 // Called every time a message comes in
-function onMessageHandler (target, tags, msg, self) {
+function onMessageHandler (channel, tags, msg, self) {
   if (self || !msg.startsWith('!')) { return; } // Ignore messages from the bot
 
   const user = tags.username;
@@ -46,30 +48,43 @@ function onMessageHandler (target, tags, msg, self) {
   // If the command is known, let's execute it
   if (commandName === '!god-request') {
     const god = msg.slice(14);
-    queueGod(user, god);
-    client.say(target, `${god} added by @${user}`);
+    if (requests.checkRequests > 0) {
+        queueGod(user, god);
+        client.say(channel, `${god} added by @${user}`);
+    }
+    else {
+        client.say(channel, `Sorry @${user}, you have no requests remaining.`);
+    }
     console.log(`* Executed ${commandName} command`);
   }
 
   else if (commandName === '!god-request-list') {
       //
       const list = getQueue();
-      client.say(target, `${list}`);
+      client.say(channel, `${list}`);
       console.log(`* Executed ${commandName} command`);
   }
 
   else if (commandName === '!god-request-next') {
       const nextGod = removeNextQueue();
-      client.say(target, `Next God in Queue: ${nextGod}`);
+      client.say(channel, `Next God in Queue: ${nextGod}`);
       console.log(`* Executed ${commandName} command`);
   }
 
   else if (commandName === '!god-request-clear') {
       clearQueue();
-      client.say(target, `Queue has been cleared`);
+      client.say(channel, `Queue has been cleared`);
       console.log(`* Executed ${commandName} command`);
   }
+
+  else if (commandName === '!check-requests') {
+    const requestCount = requests.checkRequests(user);
+    client.say(channel, `${user} has ${requestCount} remaining requests.`);
+    console.log(`* Executed ${commandName} command`);
+  }
 }
+
+// QUEUE FUNCTIONS
 
 //Add God to Queue
 function queueGod(user, god) {
@@ -83,6 +98,7 @@ function queueGod(user, god) {
     saveData();
 }
 
+//Retrieve the queued Gods
 function getQueue() {
     try {
         let output = '';
@@ -100,6 +116,7 @@ function getQueue() {
 
 }
 
+//Remove the next God from the Queue
 function removeNextQueue() {
     try {
         const nextGod = godsList[0].god;
@@ -114,17 +131,21 @@ function removeNextQueue() {
     }
 }
 
+//Wipe the queue
 function clearQueue() {
     fs.writeFileSync(file, JSON.stringify(blankList));
     godsList = blankList;
     saveData();
 }
 
+// HELPER FUNCTIONS
+
 // Called every time the bot connects to Twitch chat
 function onConnectedHandler (addr, port) {
   console.log(`* Connected to ${addr}:${port}`);
 }
 
+//Save the data
 function saveData() {
     fs.writeFileSync(file, JSON.stringify(godsList, null, 4));
 }

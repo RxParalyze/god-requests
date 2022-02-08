@@ -23,8 +23,8 @@ const opts = {
 // Create a client with our options
 const client = new tmi.client(opts);
 
-client.on('chat', (channel, userstate, message, self) => {
-    console.log(`Message "${message}" received from ${userstate['display-name']}`)
+client.on('chat', (channel, tags, message, self) => {
+    console.log(`Message "${message}" received from ${tags['display-name']}`)
     if (self) return
     const msg = message.split(' ')
     if (msg[0].toLowerCase() === '$loop') {
@@ -36,10 +36,21 @@ client.on('chat', (channel, userstate, message, self) => {
       } else {
         console.log('start $loop')
         loopInterval = setInterval(function () {
-          client.say(channel, 'Hey there! If you\'re requesting a god, try the new bot!\n!god-request:\n!god-request-list:\n') // client.say(channel, msg[1]) // ?
-        }, 300000) // 60000ms = 60s = 1min
+          //client.say(channel, 'Hey there! If you\'re requesting a god, try the new bot!\n!god-request:\n!god-request-list:\n') // client.say(channel, msg[1]) // ?
+          client.say(channel, 'I\'m still here. definitely not a bot. :D')
+        }, 450000) // 60000ms = 60s = 1min
       }
 
+    }
+
+    for (var x = 0; x < msg.length; x++) {
+      if(msg[x] === 'troll') {
+        client.say(channel, 'STOP TROLLING YA BUMS')
+      }
+    }
+
+    if(tags['display-name'] === 'Nightbot') {
+      client.say(channel, '!hug @Nightbot')
     }
   })
 
