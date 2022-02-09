@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-let users = require('./users-list.json')
+let users = require('./users-list.json');
 
 /**
  * USER JSON LAYOUT
@@ -20,6 +20,7 @@ export const requests = {
     refreshDailies
 }
 
+//TODO: add the daily requests check
 function checkRequests (username) {
     const user = users.find(x => x.username.toString() === username);
 

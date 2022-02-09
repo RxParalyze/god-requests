@@ -1,15 +1,14 @@
 import { requests } from "./player-requests";
 import { fetchWrapper } from "./fetch-wrapper";
+require('dotenv').config();
 
 const tmi = require('tmi.js');
 const fs = require('fs');
 const { exec } = require("child_process");
-require('dotenv').config();
 
 //JSON Files
 let blankList = require('./blank.json');
 let requestsList = require('./requests-list.json');
-let usersList = require('./users-list.json');
 
 // Define configuration options
 const opts = {
@@ -37,6 +36,8 @@ client.on('connected', onConnectedHandler);
 // Connect to Twitch:
 client.connect();
 
+//TODO: Check if user is a Mod, split functions to only allow mods to perform certain functions
+
 // Called every time a message comes in
 function onMessageHandler (channel, tags, msg, self) {
   if (self || !msg.startsWith('!')) { return; } // Ignore messages from the bot
@@ -49,8 +50,9 @@ function onMessageHandler (channel, tags, msg, self) {
   // If the command is known, let's execute it
   if (commandName === '!god-request') {
     const god = msg.slice(14);
-    if (requests.checkRequests > 0) {
+    if (requests.checkRequests(user) > 0) {
         queueGod(user, god);
+        requests.spendRequest(user);
         client.say(channel, `${god} added by @${user}`);
     }
     else {
@@ -73,6 +75,7 @@ function onMessageHandler (channel, tags, msg, self) {
   }
 
   else if (commandName === '!god-request-clear') {
+      //TODO: refund all un-used requests
       clearQueue();
       client.say(channel, `Queue has been cleared`);
       console.log(`* Executed ${commandName} command`);
@@ -134,7 +137,7 @@ function removeNextQueue() {
 
 //Wipe the queue
 function clearQueue() {
-    fs.writeFileSync(file, JSON.stringify(blankList));
+    fs.writeFileSync('./requests-list.json', JSON.stringify(blankList));
     requestsList = blankList;
     saveData();
 }
@@ -151,7 +154,8 @@ function onConnectedHandler (addr, port) {
 
 //Check all subscribers
 function checkSubscribers() {
-
+    const subList = fetchWrapper.get(`subscriptions?broadcaster_id=${process.env.BROADCASTER_ID}`);
+    fs.writeFileSync('./users-list.json', JSON.stringify(subList, null, 4));
 }
 
 function startLoop() {
@@ -170,5 +174,5 @@ function startLoop() {
 
 //Save the data
 function saveData() {
-    fs.writeFileSync(file, JSON.stringify(requestsList, null, 4));
+    fs.writeFileSync('./requests-list.json', JSON.stringify(requestsList, null, 4));
 }

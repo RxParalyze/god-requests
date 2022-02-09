@@ -2,6 +2,7 @@ require('dotenv').config();
 
 const twitchURL = process.env.TWITCH_URL;
 const token = process.env.TWITCH_OAUTH_TOKEN;
+const clientID = process.env.CLIENT_ID;
 
 export const fetchWrapper = {
     get,
@@ -49,7 +50,10 @@ function _delete(url) {
 // helper functions
 
 function authHeader() {
-    return { Authorization: `Bearer ${token}` };
+    return {
+        "Authorization": `Bearer ${token}`,
+        "Client-Id": `${clientID}`
+    };
 }
 
 function handleResponse(response) {

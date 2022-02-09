@@ -1,5 +1,4 @@
 const tmi = require('tmi.js');
-const fs = require('fs');
 require('dotenv').config();
 
 let loopInterval;
