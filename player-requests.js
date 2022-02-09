@@ -86,7 +86,7 @@ function refundRequest(username) {
 
     var requestNum = user.requests;
 
-    if(user.level >= 2) {
+    if(user.level >= 2000) {
         user.daily = true;
         users.push(user);
     }
@@ -99,7 +99,7 @@ function refundRequest(username) {
 
 function refreshDailies(){
     for(const user in users) {
-        if (user.level >= 2) {
+        if (user.level >= 2000) {
             user.daily = true;
             users.push(user);
         }

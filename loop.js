@@ -12,11 +12,11 @@ const opts = {
       reconnect: true
     },
     identity: {
-        username: process.env.USERNAME,
-        password: process.env.TWITCH_OAUTH_TOKEN
+      username: process.env.USERNAME,
+      password: process.env.TWITCH_OAUTH_TOKEN
     },
     channels: [
-        'christdickson'
+      process.env.CHANNEL
     ]
 };
 

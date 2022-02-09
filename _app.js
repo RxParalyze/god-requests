@@ -1,14 +1,15 @@
 import { requests } from "./player-requests";
+import { fetchWrapper } from "./fetch-wrapper";
 
 const tmi = require('tmi.js');
 const fs = require('fs');
+const { exec } = require("child_process");
 require('dotenv').config();
 
-const file = './gods-list.json';
-const blank = './blank.json';
-
-let blankList = require(blank);
-let godsList = require(file);
+//JSON Files
+let blankList = require('./blank.json');
+let requestsList = require('./requests-list.json');
+let usersList = require('./users-list.json');
 
 // Define configuration options
 const opts = {
@@ -22,7 +23,7 @@ const opts = {
         password: process.env.TWITCH_OAUTH_TOKEN
     },
     channels: [
-        'christdickson'
+        process.env.CHANNEL
     ]
 };
 
@@ -94,7 +95,7 @@ function queueGod(user, god) {
         god: god
     };
 
-    godsList.push(request);
+    requestsList.push(request);
     saveData();
 }
 
@@ -103,8 +104,8 @@ function getQueue() {
     try {
         let output = '';
 
-        for (let i = 0; i < godsList.length; i++) {
-            output += `${i+1}. ${godsList[i].god} from @${godsList[i].user}\n`;
+        for (let i = 0; i < requestsList.length; i++) {
+            output += `${i+1}. ${requestsList[i].god} from @${requestsList[i].user}\n`;
         }
 
         return output;
@@ -119,8 +120,8 @@ function getQueue() {
 //Remove the next God from the Queue
 function removeNextQueue() {
     try {
-        const nextGod = godsList[0].god;
-        godsList = godsList.splice(1);
+        const nextGod = requestsList[0].god;
+        requestsList = requestsList.splice(1);
         saveData();
 
         return JSON.stringify(nextGod);
@@ -134,18 +135,40 @@ function removeNextQueue() {
 //Wipe the queue
 function clearQueue() {
     fs.writeFileSync(file, JSON.stringify(blankList));
-    godsList = blankList;
+    requestsList = blankList;
     saveData();
 }
 
-// HELPER FUNCTIONS
-
 // Called every time the bot connects to Twitch chat
 function onConnectedHandler (addr, port) {
-  console.log(`* Connected to ${addr}:${port}`);
+    console.log(`* Connected to ${addr}:${port}`);
+    startLoop();
+    checkSubscribers();
+}
+
+
+// HELPER FUNCTIONS
+
+//Check all subscribers
+function checkSubscribers() {
+
+}
+
+function startLoop() {
+    exec("node loop.js", (error, stdout, stderr) => {
+        if (error) {
+            console.log(`error: ${error.message}`);
+            return;
+        }
+        if (stderr) {
+            console.log(`stderr: ${stderr}`);
+            return;
+        }
+        console.log(`stdout: ${stdout}`);
+    });
 }
 
 //Save the data
 function saveData() {
-    fs.writeFileSync(file, JSON.stringify(godsList, null, 4));
+    fs.writeFileSync(file, JSON.stringify(requestsList, null, 4));
 }
