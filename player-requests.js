@@ -5,6 +5,7 @@ let users = require('./users-list.json');
 /**
  * USER JSON LAYOUT
  * username -> string
+ * user_id -> int
  * requests -> int
  * level    -> int
  * daily    -> boolean
@@ -17,7 +18,8 @@ export const requests = {
     spendRequest,
     refundRequest,
     checkRequests,
-    refreshDailies
+    refreshDailies,
+    generateSubs
 }
 
 //TODO: add the daily requests check
@@ -32,7 +34,7 @@ function checkRequests (username) {
     }
 }
 
-//check each user's subscription level
+//Check each user's subscription level
 function changeSubLevel(username, level) {
     const user = users.find(x => x.username.toString() === username);
 
@@ -81,7 +83,7 @@ function spendRequest(username) {
     }
 }
 
-//refund requests
+//Refund requests
 function refundRequest(username) {
     const user = users.find(x => x.username.toString() === username);
 
@@ -98,7 +100,8 @@ function refundRequest(username) {
     saveData();
 }
 
-function refreshDailies(){
+//Refresh Daily Requests for Tier 2+ Users
+function refreshDailies() {
     for(const user in users) {
         if (user.level >= 2000) {
             user.daily = true;
@@ -108,6 +111,34 @@ function refreshDailies(){
     saveData();
 }
 
+/**
+ * USER JSON LAYOUT
+ * username -> string
+ * user_id -> int
+ * requests -> int
+ * level    -> int
+ * daily    -> boolean
+ */
+
+//Generate Subscriber List
+function generateSubs(data) {
+    const subList = JSON.parse(data);
+
+    for (let i = 0; i < subList.length; i++) {
+        const output = subList[i];
+        const user = {
+            username    = output.user_name,
+            user_id     = output.user_id,
+            level       = output.tier
+        };
+        users.push(user);
+    }
+
+    saveData();
+}
+
+
+//Save to users-list.json
 function saveData() {
     fs.writeFileSync('./users-list.json', JSON.stringify(users, null, 4));
 }

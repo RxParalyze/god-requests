@@ -33,6 +33,9 @@ const client = new tmi.client(opts);
 client.on('message', onMessageHandler);
 client.on('connected', onConnectedHandler);
 
+//INFO: possible needed commands
+//client.isMod(channel, username); -> check if messager is a mod: https://github.com/tmijs/tmi.js/blob/master/lib/client.js, ln 1445
+
 // Connect to Twitch:
 client.connect();
 
@@ -40,64 +43,71 @@ client.connect();
 
 // Called every time a message comes in
 function onMessageHandler (channel, tags, msg, self) {
-  if (self || !msg.startsWith('!')) { return; } // Ignore messages from the bot and messages that aren't commands
+    if (self || !msg.startsWith('!')) { return; } // Ignore messages from the bot and messages that aren't commands
 
-  [command, option] = msg.split(" ");
+    [command, option] = msg.split(" ");
 
-  const user = tags.username;
+    const user = tags.username;
 
-  //const commandName = msg.substring(0,msg.indexOf(':'));
-  console.log(`Command name = ${command}`);
+    //const commandName = msg.substring(0,msg.indexOf(':'));
+    console.log(`Command name = ${command[0]}`);
 
-  // If the command is known, let's execute it
-  if (command === '!god-request') {
-    //const god = msg.slice(14);
-    if (requests.checkRequests(user) > 0) {
-        queueGod(user, option);
-        client.say(channel, `${option} added by @${user}`);
-    }
-    else {
-        client.say(channel, `Sorry @${user}, you have no requests remaining.`);
-    }
-    console.log(`* Executed ${command} command`);
-  }
+    // If the command is known, let's execute it
+    if (command[0] === '!god-request') {
+        //const god = msg.slice(14);
+        if (requests.checkRequests(user) > 0) {
+            queueGod(user, option[0]);
+            client.say(channel, `${option[0]} added by @${user}`);
+        }
+        else {
+            client.say(channel, `Sorry @${user}, you have no requests remaining.`);
+        }
 
-  else if (command === '!god-request-list') {
-      //
-      const list = getQueue();
-      client.say(channel, `${list}`);
-      console.log(`* Executed ${command} command`);
-  }
-
-  else if (command === '!god-request-next') {
-      const nextGod = removeNextQueue();
-      client.say(channel, `Next God in Queue: ${nextGod}`);
-      console.log(`* Executed ${command} command`);
-  }
-
-  else if (command === '!god-request-clear') {
-      refundQueue();
-      client.say(channel, `Queue has been cleared`);
-      console.log(`* Executed ${command} command`);
-  }
-
-  else if (command === '!check-requests') {
-    const requestCount = requests.checkRequests(user);
-    client.say(channel, `${user} has ${requestCount} remaining requests.`);
-    console.log(`* Executed ${command} command`);
-  }
-
-  else if (command === '!refund-request') {
-    if(!(option == null)){
-        refundUser(option);
-    }
-    else {
-        refundUser(user);
+        console.log(`* Executed ${command[0]} command`);
     }
 
-    client.say(channel, `Refunded ${user}'s god requests`);
-    console.log(`* Executed ${command} command`);
-  }
+    else if (command[0] === '!god-request-list') {
+        const list = getQueue();
+        client.say(channel, `${list}`);
+        console.log(`* Executed ${command[0]} command`);
+    }
+
+    else if (command[0] === '!god-request-next' && client.isMod(process.env.CHANNEL, user)) {
+        const nextGod = removeNextQueue();
+        client.say(channel, `Next God in Queue: ${nextGod}`);
+        console.log(`* Executed ${command[0]} command`);
+    }
+
+    else if (command[0] === '!god-request-clear' && client.isMod(process.env.CHANNEL, user)) {
+        refundQueue();
+        client.say(channel, `Queue has been cleared`);
+        console.log(`* Executed ${command[0]} command`);
+    }
+
+    else if (command[0] === '!check-requests') {
+        var requestCount;
+        if(!(option[0] == null) && client.isMod(process.env.CHANNEL, user)){
+            requestCount = requests.checkRequests(option[0]);
+        }
+        else {
+            requestCount = requests.checkRequests(user);
+        }
+
+        client.say(channel, `${user} has ${requestCount} remaining requests.`);
+        console.log(`* Executed ${command[0]} command`);
+    }
+
+    else if (command[0] === '!refund-request') {
+        if(!(option[0] == null) && client.isMod(process.env.CHANNEL, user)){
+            refundUser(option[0]);
+        }
+        else {
+            refundUser(user);
+        }
+
+        client.say(channel, `Refunded ${user}'s god requests`);
+        console.log(`* Executed ${command[0]} command`);
+    }
 }
 
 // QUEUE FUNCTIONS
@@ -179,8 +189,12 @@ function removeNextQueue() {
 
 //Wipe the queue
 function clearQueue() {
-    fs.writeFileSync('./requests-list.json', JSON.stringify(blankList));
-    requestsList = blankList;
+    //fs.writeFileSync('./requests-list.json', JSON.stringify(blankList));
+    //requestsList = blankList;
+    for (let i = 0; i < requestsList.length; i++) {
+        requestsList.pop();
+    }
+
     saveData();
 }
 
@@ -188,7 +202,9 @@ function clearQueue() {
 function onConnectedHandler (addr, port) {
     console.log(`* Connected to ${addr}:${port}`);
     startLoop();
+    console.log(`Began Loop`);
     checkSubscribers();
+    console.log(`Player List has been populated`);
 }
 
 
@@ -197,7 +213,8 @@ function onConnectedHandler (addr, port) {
 //Check all subscribers
 function checkSubscribers() {
     const subList = fetchWrapper.get(`subscriptions?broadcaster_id=${process.env.BROADCASTER_ID}`);
-    fs.writeFileSync('./users-list.json', JSON.stringify(subList, null, 4));
+    requests.generateSubs(subList);
+    requests.refreshDailies();
 }
 
 function startLoop() {
