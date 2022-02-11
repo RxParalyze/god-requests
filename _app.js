@@ -40,51 +40,63 @@ client.connect();
 
 // Called every time a message comes in
 function onMessageHandler (channel, tags, msg, self) {
-  if (self || !msg.startsWith('!')) { return; } // Ignore messages from the bot
+  if (self || !msg.startsWith('!')) { return; } // Ignore messages from the bot and messages that aren't commands
+
+  [command, option] = msg.split(" ");
 
   const user = tags.username;
 
-  const commandName = msg.substring(0,msg.indexOf(':'));
-  console.log(`Command name = ${commandName}`);
+  //const commandName = msg.substring(0,msg.indexOf(':'));
+  console.log(`Command name = ${command}`);
 
   // If the command is known, let's execute it
-  if (commandName === '!god-request') {
-    const god = msg.slice(14);
+  if (command === '!god-request') {
+    //const god = msg.slice(14);
     if (requests.checkRequests(user) > 0) {
-        queueGod(user, god);
-        requests.spendRequest(user);
-        client.say(channel, `${god} added by @${user}`);
+        queueGod(user, option);
+        client.say(channel, `${option} added by @${user}`);
     }
     else {
         client.say(channel, `Sorry @${user}, you have no requests remaining.`);
     }
-    console.log(`* Executed ${commandName} command`);
+    console.log(`* Executed ${command} command`);
   }
 
-  else if (commandName === '!god-request-list') {
+  else if (command === '!god-request-list') {
       //
       const list = getQueue();
       client.say(channel, `${list}`);
-      console.log(`* Executed ${commandName} command`);
+      console.log(`* Executed ${command} command`);
   }
 
-  else if (commandName === '!god-request-next') {
+  else if (command === '!god-request-next') {
       const nextGod = removeNextQueue();
       client.say(channel, `Next God in Queue: ${nextGod}`);
-      console.log(`* Executed ${commandName} command`);
+      console.log(`* Executed ${command} command`);
   }
 
-  else if (commandName === '!god-request-clear') {
-      //TODO: refund all un-used requests
-      clearQueue();
+  else if (command === '!god-request-clear') {
+      refundQueue();
       client.say(channel, `Queue has been cleared`);
-      console.log(`* Executed ${commandName} command`);
+      console.log(`* Executed ${command} command`);
   }
 
-  else if (commandName === '!check-requests') {
+  else if (command === '!check-requests') {
     const requestCount = requests.checkRequests(user);
     client.say(channel, `${user} has ${requestCount} remaining requests.`);
-    console.log(`* Executed ${commandName} command`);
+    console.log(`* Executed ${command} command`);
+  }
+
+  else if (command === '!refund-request') {
+    if(!(option == null)){
+        refundUser(option);
+    }
+    else {
+        refundUser(user);
+    }
+
+    client.say(channel, `Refunded ${user}'s god requests`);
+    console.log(`* Executed ${command} command`);
   }
 }
 
@@ -100,6 +112,8 @@ function queueGod(user, god) {
 
     requestsList.push(request);
     saveData();
+
+    requests.spendRequest(user);
 }
 
 //Retrieve the queued Gods
@@ -118,6 +132,34 @@ function getQueue() {
         return 'No gods in queue';
     }
 
+}
+
+//Refund the Entire Queue
+function refundQueue() {
+    try {
+        for (let i = 0; i < requestsList.length; i++) {
+            requests.refundRequest(requestsList[i].user);
+        }
+        clearQueue();
+    }
+    catch(error) {
+        console.log(error);
+    }
+}
+
+//Refund a Single User's Requests
+function refundUser(user)  {
+    try {
+        for (let i = 0; i < requestsList.length; i++) {
+            if(requestsList[i].user === user){
+                requests.refundRequest(requestsList[i].user);
+                //TODO: remove the request from the queue
+            }
+        }
+    }
+    catch(error) {
+        console.log(error);
+    }
 }
 
 //Remove the next God from the Queue
