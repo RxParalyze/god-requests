@@ -16,6 +16,7 @@ const opts = {
     },
     channels: [
       process.env.CHANNEL
+      //'Hellmasker'
     ]
 };
 
@@ -35,22 +36,29 @@ client.on('chat', (channel, tags, message, self) => {
       } else {
         console.log('start $loop')
         loopInterval = setInterval(function () {
-          client.say(channel, 'Hey there! If you\'re requesting a god, try the new commands!\n!god-request\n!god-request-list\n') // client.say(channel, msg[1]) // ?
-          //client.say(channel, 'I\'m still here. definitely not a bot. :D')
+          //client.say(channel, 'Hey there! If you\'re requesting a god, try the new commands!\n!god-request\n!god-request-list\n') // client.say(channel, msg[1]) // ?
+          client.say(channel, 'CHRIS\'S HOUSE IS HAUNTED AND IT KEEPS ME UP AT NIGHT.')
         }, 450000) // 60000ms = 60s = 1min
       }
 
     }
 
     for (var x = 0; x < msg.length; x++) {
-      if(msg[x] === 'troll') {
+      if(msg[x].toLowerCase() === 'troll') {
         client.say(channel, 'STOP TROLLING YA BUMS')
+      }
+      if(msg[x].toLowerCase() === 'sniper') {
+        client.say(channel, 'I hate stream snipers.')
       }
     }
 
     if(tags['display-name'] === 'Nightbot') {
       client.say(channel, '!hug @Nightbot')
     }
+
+    /*if(tags['display-name'] === 'braden0227') {
+      client.say(channel, '!hug @braden0227')
+    }*/
   })
 
   client.connect()
